@@ -1,0 +1,83 @@
+version: '3'
+services:
+  zabbix-mysql:
+    image: mysql:5.7
+    container_name: zabbix-mysql
+    restart: always
+    command:
+      --character-set-server=utf8
+      --collation-server=utf8_bin
+    volumes:
+      - /data/mysql:/var/lib/mysql
+    env_file:
+      - ./common/env/mysql/env_mysql
+    ports:
+      - 3306:3306
+    networks:
+      - zabbix-proxy
+    #environment:
+     # MYSQL_DATABASE: zabbix_proxy
+     # MYSQL_USER: zabbix
+     # MYSQL_PASSWORD: zabbix.proxy
+     # MYSQL_ROOT_PASSWORD: zabbix
+        
+        
+  zabbix-proxy:
+    image: zabbix/zabbix-proxy-mysql
+    container_name: zabbix-proxy
+    restart: always
+    volumes:
+      - /etc/localtime:/etc/localtime
+    #  - ./common/config/zabbix-proxy/zabbix_proxy.conf:/etc/zabbix/zabbix_proxy.conf
+    env_file:
+      - ./common/env/zabbix-proxy/env_proxy
+    networks:
+      - zabbix-proxy
+    ports:
+      - 10051:10051
+   # environment:
+   #   DB_SERVER_HOST: zabbix-mysql
+   #   MYSQL_DATABASE: zabbix_proxy
+   #   MYSQL_USER: zabbix
+   #   MYSQL_PASSWORD: zabbix.proxy
+   #   ZBX_HOSTNAME: zbx-proxy-1
+   #   ZBX_SERVER_HOST: 192.168.70.180
+   #   ZBX_TIMEOUT: 120
+   #   ZBX_CONFIGFREQUENCY: 300
+   #   ZBX_DATASENDERFREQUENCY: 3
+    links:
+      - zabbix-mysql
+    depends_on:
+      - zabbix-mysql
+
+  zabbix-agent:
+    image: zabbix/zabbix-agent
+    container_name: zabbix-agent
+    restart: always                       
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./etc/zabbix-agent/docker-entrypoint.sh:/usr/bin/docker-entrypoint.sh:ro
+      - ./etc/zabbix_agentd.d:/etc/zabbix/zabbix_agentd.d
+      - ./logs/zabbix-agent:/tmp
+    user: root
+    privileged: true
+    ports:
+      - 10050:10050
+    env_file:
+      - ./common/env/zabbix-agent/env_agent
+    links:
+      - zabbix-proxy:zabbix-proxy
+    depends_on:
+      - zabbix-proxy
+    ports:
+      - 10050:10050
+    networks:
+      - zabbix-proxy
+
+networks:
+  zabbix-proxy:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.16.239.0/24

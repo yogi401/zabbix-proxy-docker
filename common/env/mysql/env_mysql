@@ -1,0 +1,4 @@
+MYSQL_DATABASE=zabbix_proxy
+MYSQL_USER=zabbix
+MYSQL_PASSWORD=zabbix.proxy
+MYSQL_ROOT_PASSWORD=zabbix
