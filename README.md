@@ -60,7 +60,10 @@ ZBX_LOGFILE=/tmp/zabbix_agentd.log
 
 ## 使用方式
 ```
-cd zabbix-proxy
+mkdir ~/zabbix-proxy
+cd ~/zabbix-proxy
+git clone https://github.com/yogi401/zabbix-proxy-docker.git
+cd zabbix-proxy-docker
 docker-compose up -d
 ```
 
